@@ -53,32 +53,28 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        run: ./gradlew assembleDebug --no-daemon
 
       - name: Locate APK
         id: apk
         run: |
           APK_PATH=$(find . -name "*.apk" -path "*/debug/*" | head -1)
           echo "path=$APK_PATH" >> $GITHUB_OUTPUT
-          echo "Found APK: $APK_PATH"
 
-      - name: Upload APK to InsForge Storage
-        id: upload
+      - name: Create GitHub Release and upload APK
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          APK_KEY="${{ inputs.app_id }}/app-debug.apk"
-          RESPONSE=$(curl -s -w "\n%{http_code}" \
-            -X POST "${{ secrets.INSFORGE_URL }}/storage/v1/object/builds/$APK_KEY" \
-            -H "Authorization: Bearer ${{ secrets.INSFORGE_API_KEY }}" \
-            -H "Content-Type: application/vnd.android.package-archive" \
-            --data-binary "@${{ steps.apk.outputs.path }}")
-          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
-          BODY=$(echo "$RESPONSE" | head -1)
-          echo "Upload response ($HTTP_CODE): $BODY"
-          if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "201" ]; then
-            echo "Upload failed with HTTP $HTTP_CODE"
-            exit 1
-          fi
-          APK_URL="${{ secrets.INSFORGE_URL }}/storage/v1/object/public/builds/$APK_KEY"
+          TAG="build-${{ inputs.app_id }}"
+          # Create release
+          gh release create "$TAG" \
+            --title "Build: ${{ inputs.app_name }}" \
+            --notes "Auto-built from ${{ inputs.website_url }}" \
+            --prerelease \
+            "${{ steps.apk.outputs.path }}#app-debug.apk"
+          # Get download URL
+          APK_URL="https://github.com/${{ github.repository }}/releases/download/${TAG}/app-debug.apk"
           echo "apk_url=$APK_URL" >> $GITHUB_OUTPUT
 
       - name: Notify webhook — success
@@ -87,7 +83,7 @@ jobs:
           curl -s -X POST "${{ inputs.webhook_url }}" \
             -H "Content-Type: application/json" \
             -H "x-webhook-secret: ${{ secrets.WEBHOOK_SECRET }}" \
-            -d "{\"app_id\":\"${{ inputs.app_id }}\",\"status\":\"completed\",\"apk_url\":\"${{ steps.upload.outputs.apk_url }}\"}"
+            -d "{\"app_id\":\"${{ inputs.app_id }}\",\"status\":\"completed\",\"apk_url\":\"${{ steps.release.outputs.apk_url }}\"}"
 
       - name: Notify webhook — failure
         if: failure()
