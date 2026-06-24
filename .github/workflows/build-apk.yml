@@ -1,0 +1,116 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_id:
+        description: "App record ID from WebToApp"
+        required: true
+      website_url:
+        description: "Website URL to embed"
+        required: true
+      app_name:
+        description: "App display name"
+        required: true
+      package_name:
+        description: "Android package name (e.g. com.example.myapp)"
+        required: true
+      webhook_url:
+        description: "Webhook URL to notify on completion"
+        required: true
+      webhook_secret:
+        description: "Secret to authenticate webhook call"
+        required: true
+      insforge_url:
+        description: "InsForge project base URL"
+        required: true
+      insforge_api_key:
+        description: "InsForge admin API key"
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout template
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Inject website URL into MainActivity.kt
+        run: |
+          sed -i 's|url = "https://www.google.com"|url = "${{ inputs.website_url }}"|g' \
+            app/src/main/java/com/example/webtoapp/MainActivity.kt
+
+      - name: Inject app name into strings.xml
+        run: |
+          sed -i 's|<string name="app_name">WebToApp</string>|<string name="app_name">${{ inputs.app_name }}</string>|g' \
+            app/src/main/res/values/strings.xml
+
+      - name: Inject applicationId into build.gradle.kts
+        run: |
+          sed -i 's|applicationId = "com.example.webtoapp"|applicationId = "${{ inputs.package_name }}"|g' \
+            app/build.gradle.kts
+
+      - name: Grant execute permission to gradlew
+        run: chmod +x gradlew
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Locate APK
+        id: apk
+        run: |
+          APK_PATH=$(find . -name "*.apk" -path "*/debug/*" | head -1)
+          echo "path=$APK_PATH" >> $GITHUB_OUTPUT
+          echo "Found APK: $APK_PATH"
+
+      - name: Upload APK to InsForge Storage
+        id: upload
+        run: |
+          APK_KEY="${{ inputs.app_id }}/app-debug.apk"
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST "${{ inputs.insforge_url }}/storage/v1/object/builds/$APK_KEY" \
+            -H "Authorization: Bearer ${{ inputs.insforge_api_key }}" \
+            -H "Content-Type: application/vnd.android.package-archive" \
+            --data-binary "@${{ steps.apk.outputs.path }}")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -1)
+          echo "Upload response ($HTTP_CODE): $BODY"
+          if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "201" ]; then
+            echo "Upload failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
+          # Build public URL
+          APK_URL="${{ inputs.insforge_url }}/storage/v1/object/public/builds/$APK_KEY"
+          echo "apk_url=$APK_URL" >> $GITHUB_OUTPUT
+
+      - name: Notify webhook — success
+        if: success()
+        run: |
+          curl -s -X POST "${{ inputs.webhook_url }}" \
+            -H "Content-Type: application/json" \
+            -H "x-webhook-secret: ${{ inputs.webhook_secret }}" \
+            -d '{
+              "app_id": "${{ inputs.app_id }}",
+              "status": "completed",
+              "apk_url": "${{ steps.upload.outputs.apk_url }}"
+            }'
+
+      - name: Notify webhook — failure
+        if: failure()
+        run: |
+          curl -s -X POST "${{ inputs.webhook_url }}" \
+            -H "Content-Type: application/json" \
+            -H "x-webhook-secret: ${{ inputs.webhook_secret }}" \
+            -d '{
+              "app_id": "${{ inputs.app_id }}",
+              "status": "failed",
+              "error": "GitHub Actions build failed. Check the workflow run for details."
+            }'
