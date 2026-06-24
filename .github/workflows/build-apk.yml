@@ -18,15 +18,6 @@ on:
       webhook_url:
         description: "Webhook URL to notify on completion"
         required: true
-      webhook_secret:
-        description: "Secret to authenticate webhook call"
-        required: true
-      insforge_url:
-        description: "InsForge project base URL"
-        required: true
-      insforge_api_key:
-        description: "InsForge admin API key"
-        required: true
 
 jobs:
   build:
@@ -76,8 +67,8 @@ jobs:
         run: |
           APK_KEY="${{ inputs.app_id }}/app-debug.apk"
           RESPONSE=$(curl -s -w "\n%{http_code}" \
-            -X POST "${{ inputs.insforge_url }}/storage/v1/object/builds/$APK_KEY" \
-            -H "Authorization: Bearer ${{ inputs.insforge_api_key }}" \
+            -X POST "${{ secrets.INSFORGE_URL }}/storage/v1/object/builds/$APK_KEY" \
+            -H "Authorization: Bearer ${{ secrets.INSFORGE_API_KEY }}" \
             -H "Content-Type: application/vnd.android.package-archive" \
             --data-binary "@${{ steps.apk.outputs.path }}")
           HTTP_CODE=$(echo "$RESPONSE" | tail -1)
@@ -87,8 +78,7 @@ jobs:
             echo "Upload failed with HTTP $HTTP_CODE"
             exit 1
           fi
-          # Build public URL
-          APK_URL="${{ inputs.insforge_url }}/storage/v1/object/public/builds/$APK_KEY"
+          APK_URL="${{ secrets.INSFORGE_URL }}/storage/v1/object/public/builds/$APK_KEY"
           echo "apk_url=$APK_URL" >> $GITHUB_OUTPUT
 
       - name: Notify webhook — success
@@ -96,21 +86,13 @@ jobs:
         run: |
           curl -s -X POST "${{ inputs.webhook_url }}" \
             -H "Content-Type: application/json" \
-            -H "x-webhook-secret: ${{ inputs.webhook_secret }}" \
-            -d '{
-              "app_id": "${{ inputs.app_id }}",
-              "status": "completed",
-              "apk_url": "${{ steps.upload.outputs.apk_url }}"
-            }'
+            -H "x-webhook-secret: ${{ secrets.WEBHOOK_SECRET }}" \
+            -d "{\"app_id\":\"${{ inputs.app_id }}\",\"status\":\"completed\",\"apk_url\":\"${{ steps.upload.outputs.apk_url }}\"}"
 
       - name: Notify webhook — failure
         if: failure()
         run: |
           curl -s -X POST "${{ inputs.webhook_url }}" \
             -H "Content-Type: application/json" \
-            -H "x-webhook-secret: ${{ inputs.webhook_secret }}" \
-            -d '{
-              "app_id": "${{ inputs.app_id }}",
-              "status": "failed",
-              "error": "GitHub Actions build failed. Check the workflow run for details."
-            }'
+            -H "x-webhook-secret: ${{ secrets.WEBHOOK_SECRET }}" \
+            -d "{\"app_id\":\"${{ inputs.app_id }}\",\"status\":\"failed\",\"error\":\"GitHub Actions build failed.\"}"
