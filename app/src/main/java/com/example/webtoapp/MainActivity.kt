@@ -5,46 +5,26 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.webtoapp.ui.theme.WebToAppTheme
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // ── Deep Linking: read URL from intent data if launched via a link ──
+        val deepLinkUrl = intent?.data?.toString()
+        val startUrl = if (!deepLinkUrl.isNullOrEmpty()) deepLinkUrl else "https://www.google.com"
+
         setContent {
             WebToAppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                 /*   Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )*/
-                    WebPage(
-                        url = "https://www.google.com"
-                    )
+                Scaffold(modifier = Modifier.fillMaxSize()) { _ ->
+                    WebPage(url = startUrl)
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    WebToAppTheme {
-        Greeting("Android")
     }
 }

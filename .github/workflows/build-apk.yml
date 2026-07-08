@@ -35,11 +35,33 @@ jobs:
         with:
           java-version: "17"
           distribution: "temurin"
+          cache: "gradle"
+
+      - name: Cache Gradle build output
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            .gradle
+            app/build/intermediates
+            app/build/kotlin
+            app/build/tmp
+          key: gradle-build-${{ hashFiles('**/*.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml') }}
+          restore-keys: |
+            gradle-build-
+            gradle-
 
       - name: Inject website URL into MainActivity.kt
         run: |
-          sed -i 's|url = "https://www.google.com"|url = "${{ inputs.website_url }}"|g' \
+          sed -i 's|"https://www.google.com"|"${{ inputs.website_url }}"|g' \
             app/src/main/java/com/example/webtoapp/MainActivity.kt
+
+      - name: Inject deep link host into AndroidManifest.xml
+        run: |
+          HOST=$(echo "${{ inputs.website_url }}" | sed 's|https\?://||' | sed 's|/.*||')
+          sed -i "s|android:host=\"www.google.com\"|android:host=\"${HOST}\"|g" \
+            app/src/main/AndroidManifest.xml
 
       - name: Inject app name into strings.xml
         run: |
@@ -55,7 +77,14 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon
+        run: |
+          ./gradlew assembleDebug \
+            --no-daemon \
+            --build-cache \
+            --parallel \
+            -x lint \
+            -x test \
+            -x testDebugUnitTest
 
       - name: Locate APK
         id: apk
@@ -63,19 +92,25 @@ jobs:
           APK_PATH=$(find . -name "*.apk" -path "*/debug/*" | head -1)
           echo "path=$APK_PATH" >> $GITHUB_OUTPUT
 
+      - name: Delete existing release if tag exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="build-${{ inputs.app_id }}"
+          gh release delete "$TAG" --yes 2>/dev/null || true
+          git push origin --delete "refs/tags/$TAG" 2>/dev/null || true
+
       - name: Create GitHub Release and upload APK
         id: release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="build-${{ inputs.app_id }}"
-          # Create release
           gh release create "$TAG" \
             --title "Build: ${{ inputs.app_name }}" \
             --notes "Auto-built from ${{ inputs.website_url }}" \
             --prerelease \
             "${{ steps.apk.outputs.path }}#app-debug.apk"
-          # Get download URL
           APK_URL="https://github.com/${{ github.repository }}/releases/download/${TAG}/app-debug.apk"
           echo "apk_url=$APK_URL" >> $GITHUB_OUTPUT
 
