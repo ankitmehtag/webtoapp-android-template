@@ -342,7 +342,7 @@ private fun WebViewContainer(
                 }
 
                 // ── Cookies ───────────────────────────────────────────────
-                CookieManager.getInstance().apply {
+                CookieManager.getInstance().run {
                     setAcceptCookie(true)
                     setAcceptThirdPartyCookies(this@apply, true)
                 }
@@ -367,9 +367,9 @@ private fun WebViewContainer(
                         val networkErrors = setOf(
                             WebViewClient.ERROR_HOST_LOOKUP,
                             WebViewClient.ERROR_CONNECT,
-                            WebViewClient.ERROR_INTERNET_DISCONNECTED,
                             WebViewClient.ERROR_TIMEOUT,
                             WebViewClient.ERROR_UNKNOWN,
+                            WebViewClient.ERROR_NETWORK_CHANGED,
                         )
                         if (error.errorCode in networkErrors) latestOnOffline.value()
                     }
