@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">WebToApp</string>
+
+    <!-- Exit dialog -->
+    <string name="exit_title">Exit App</string>
+    <string name="exit_message">Are you sure you want to exit?</string>
+    <string name="exit_confirm">Exit</string>
+    <string name="exit_cancel">Stay</string>
+
+    <!-- Offline screen -->
+    <string name="offline_title">No Internet Connection</string>
+    <string name="offline_message">Please check your connection and try again.</string>
+    <string name="offline_retry">Retry</string>
 </resources>

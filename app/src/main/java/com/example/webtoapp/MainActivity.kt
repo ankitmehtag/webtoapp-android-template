@@ -15,9 +15,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // ── Deep Linking: read URL from intent data if launched via a link ──
-        val deepLinkUrl = intent?.data?.toString()
-        val startUrl = if (!deepLinkUrl.isNullOrEmpty()) deepLinkUrl else "https://www.google.com"
+        // Deep link URL wins; fall back to Config.URL
+        val startUrl = intent?.data?.toString()?.takeIf { it.isNotEmpty() } ?: Config.URL
 
         setContent {
             WebToAppTheme {
