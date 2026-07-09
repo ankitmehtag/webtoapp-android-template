@@ -14,6 +14,10 @@ object Config {
     const val APP_NAME      = "WebToApp"
     const val PRIMARY_COLOR = "#6366F1"
 
+    // ── Splash screen ────────────────────────────────────────────────────
+    // SPLASH_BG_COLOR = #6366F1
+    const val SPLASH_BG_COLOR = "#6366F1"
+
     // ── Features (sed-replaceable true/false) ────────────────────────────
     // PULL_TO_REFRESH = true
     const val PULL_TO_REFRESH = true

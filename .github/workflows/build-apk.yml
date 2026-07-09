@@ -22,6 +22,10 @@ on:
         description: "Enable pull-to-refresh (true/false)"
         required: false
         default: "true"
+      primary_color:
+        description: "Primary/splash colour as hex (e.g. #6366F1)"
+        required: false
+        default: "#6366F1"
 
 jobs:
   build:
@@ -67,6 +71,19 @@ jobs:
             app/src/main/java/com/example/webtoapp/Config.kt
           sed -i "s|const val PULL_TO_REFRESH = true|const val PULL_TO_REFRESH = ${{ inputs.pull_to_refresh }}|g" \
             app/src/main/java/com/example/webtoapp/Config.kt
+
+      - name: Inject primary colour into Config.kt and colors.xml
+        run: |
+          COLOR="${{ inputs.primary_color }}"
+          if [ -z "$COLOR" ]; then COLOR="#6366F1"; fi
+          # Config.kt — SPLASH_BG_COLOR and PRIMARY_COLOR
+          sed -i "s|const val SPLASH_BG_COLOR = \"#6366F1\"|const val SPLASH_BG_COLOR = \"${COLOR}\"|g" \
+            app/src/main/java/com/example/webtoapp/Config.kt
+          sed -i "s|const val PRIMARY_COLOR = \"#6366F1\"|const val PRIMARY_COLOR = \"${COLOR}\"|g" \
+            app/src/main/java/com/example/webtoapp/Config.kt
+          # colors.xml — static resource for the splash screen theme
+          sed -i "s|<color name=\"splash_background\">#6366F1</color>|<color name=\"splash_background\">${COLOR}</color>|g" \
+            app/src/main/res/values/colors.xml
 
       - name: Inject deep link host into AndroidManifest.xml
         run: |

@@ -11,4 +11,8 @@
     <string name="offline_title">No Internet Connection</string>
     <string name="offline_message">Please check your connection and try again.</string>
     <string name="offline_retry">Retry</string>
+
+    <!-- File download -->
+    <string name="download_started">Download started</string>
+    <string name="download_in_progress">Downloading…</string>
 </resources>

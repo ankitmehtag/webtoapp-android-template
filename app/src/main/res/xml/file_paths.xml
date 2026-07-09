@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    FileProvider paths for camera capture temp files.
+    Scope is intentionally limited to the camera sub-directory inside cache.
+-->
+<paths>
+    <cache-path name="camera_images" path="camera/" />
+</paths>

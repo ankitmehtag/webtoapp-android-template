@@ -1,5 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Main app window theme (used post-splash and for Compose scaffolding) -->
     <style name="Theme.WebToApp" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!--
+        Splash screen theme — set on MainActivity in AndroidManifest.xml.
+        CI patches @color/splash_background and @drawable/splash_icon to brand the app.
+        The SplashScreen API switches to Theme.WebToApp once the app is ready.
+    -->
+    <style name="Theme.WebToApp.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+        <item name="postSplashScreenTheme">@style/Theme.WebToApp</item>
+    </style>
+
 </resources>

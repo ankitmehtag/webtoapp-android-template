@@ -7,4 +7,7 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Splash screen background — CI-patchable (must match Config.SPLASH_BG_COLOR) -->
+    <color name="splash_background">#6366F1</color>
 </resources>
