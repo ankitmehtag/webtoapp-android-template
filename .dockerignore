@@ -1,0 +1,38 @@
+# ── VCS / IDE ─────────────────────────────────────────────────────────────────
+.git
+.gitignore
+.idea
+.kotlin
+*.iml
+.DS_Store
+
+# ── Local development files (must never go into the image) ───────────────────
+local.properties
+
+# ── Gradle runtime directories (populated at build time, not needed as input) ─
+.gradle/
+build/
+app/build/
+
+# ── Build outputs ─────────────────────────────────────────────────────────────
+dist/
+
+# ── Signing artefacts (NEVER bake keys into the image) ───────────────────────
+keystores/
+*.jks
+*.keystore
+*.creds.json
+
+# ── Customer / runtime inputs (supplied via /input volume at run time) ────────
+input/
+myapp.json
+build-config.json
+
+# ── Docker meta-files (not needed inside the container) ──────────────────────
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# ── Python cache ──────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc

@@ -1,0 +1,43 @@
+services:
+
+  # ── Build a single app ──────────────────────────────────────────────────────
+  # Usage:
+  #   docker compose run --rm builder
+  # Place your config.json (and optionally assets/) in ./input/ before running.
+  builder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: final
+    image: webtoapp-builder:latest
+    volumes:
+      # Read-only: config.json + assets/ (icon.png, splash.png)
+      - ./input:/input:ro
+      # Writable: signed APK + AAB written here after a successful build
+      - ./output:/output
+      # Persistent: per-customer .jks + .creds.json
+      # IMPORTANT — mount a real directory so keystores survive container restarts.
+      # Play Store updates require the SAME signing key used for the original upload.
+      - ./keystores:/keystores
+    environment:
+      # Override to point at a different config inside /input
+      - CONFIG_FILE=/input/config.json
+    # Remove the container after it exits
+    restart: "no"
+
+  # ── Rebuild the image from scratch (use after updating the template) ─────────
+  # Usage:
+  #   docker compose build --no-cache rebuild
+  rebuild:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: final
+      args:
+        # Pin specific SDK component versions here
+        CMDLINE_TOOLS_BUILD: "11076708"
+        BUILD_TOOLS_VERSION: "35.0.0"
+        COMPILE_SDK: "35"
+    image: webtoapp-builder:latest
+    entrypoint: ["echo", "Image built successfully."]
+    restart: "no"
