@@ -43,9 +43,6 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
-    // Pull-to-refresh
-    implementation("com.google.accompanist:accompanist-swiperefresh:0.36.0")
-
     // Splash screen
     implementation("androidx.core:core-splashscreen:1.0.1")
 

@@ -28,8 +28,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import java.io.File
 
 // ---------------------------------------------------------------------------
@@ -153,8 +153,6 @@ fun WebPage(url: String) {
         }
     }
 
-    val swipeState = rememberSwipeRefreshState(isRefreshing)
-
     Box(Modifier.fillMaxSize()) {
         if (isOffline) {
             OfflineScreen(onRetry = { isOffline = false; webView?.reload() })
@@ -250,12 +248,12 @@ fun WebPage(url: String) {
                 }
             }
 
+            @OptIn(ExperimentalMaterial3Api::class)
             if (Config.PULL_TO_REFRESH) {
-                SwipeRefresh(
-                    state     = swipeState,
-                    onRefresh = { isRefreshing = true; webView?.reload() },
-                    content   = content,
-                )
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh    = { isRefreshing = true; webView?.reload() },
+                ) { content() }
             } else {
                 content()
             }
