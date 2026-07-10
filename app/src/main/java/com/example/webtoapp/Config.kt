@@ -18,10 +18,6 @@ object Config {
     // SPLASH_BG_COLOR = #6366F1
     const val SPLASH_BG_COLOR = "#6366F1"
 
-    // ── Features (sed-replaceable true/false) ────────────────────────────
-    // PULL_TO_REFRESH = true
-    const val PULL_TO_REFRESH = true
-
     // ── Derived helpers ───────────────────────────────────────────────────
     val primaryColor: Color
         get() = try {

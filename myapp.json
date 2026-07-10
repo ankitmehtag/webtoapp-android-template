@@ -1,0 +1,16 @@
+{
+  "appName":      "My App",
+  "packageName":  "com.example.myapp",
+  "websiteUrl":   "https://example.com",
+  "primaryColor": "#6366F1",
+  "splashBgColor": "#6366F1",
+  "versionCode":  1,
+  "versionName":  "1.0",
+  "features": {
+    "pullToRefresh": true,
+    "push":          false,
+    "admob":         false
+  },
+  "iconPath":   "assets/icon.png",
+  "splashPath": "assets/splash.png"
+}

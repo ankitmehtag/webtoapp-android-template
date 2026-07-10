@@ -16,7 +16,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,16 +28,14 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 
 @SuppressLint("SetJavaScriptEnabled")
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WebPage(url: String) {
     val context = LocalContext.current
 
     var webView       by remember { mutableStateOf<WebView?>(null) }
     var progress      by remember { mutableFloatStateOf(0f) }
-    var isLoading     by remember { mutableStateOf(true) }
-    var isRefreshing  by remember { mutableStateOf(false) }
-    var isOffline     by remember { mutableStateOf(false) }
+    var isLoading  by remember { mutableStateOf(true) }
+    var isOffline  by remember { mutableStateOf(false) }
     var showExitDialog by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -82,9 +79,8 @@ fun WebPage(url: String) {
                         url         = url,
                         onCreated   = { webView = it },
                         onProgress  = { p ->
-                            progress     = p / 100f
-                            isLoading    = p < 100
-                            if (p == 100) isRefreshing = false
+                            progress  = p / 100f
+                            isLoading = p < 100
                         },
                         onOffline   = { isOffline = true },
                         onPermission = { req ->
@@ -144,14 +140,7 @@ fun WebPage(url: String) {
                 }
             }
 
-            if (Config.PULL_TO_REFRESH) {
-                PullToRefreshBox(
-                    isRefreshing = isRefreshing,
-                    onRefresh    = { isRefreshing = true; webView?.reload() },
-                ) { content() }
-            } else {
-                content()
-            }
+            content()
         }
     }
 }

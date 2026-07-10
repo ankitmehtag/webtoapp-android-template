@@ -18,10 +18,6 @@ on:
       webhook_url:
         description: "Webhook URL to notify on completion"
         required: true
-      pull_to_refresh:
-        description: "Enable pull-to-refresh (true/false)"
-        required: false
-        default: "true"
       primary_color:
         description: "Primary/splash colour as hex (e.g. #6366F1)"
         required: false
@@ -60,13 +56,6 @@ jobs:
       - name: Inject website URL into Config.kt
         run: |
           sed -i 's|const val URL = "https://www.google.com"|const val URL = "${{ inputs.website_url }}"|g' \
-            app/src/main/java/com/example/webtoapp/Config.kt
-
-      - name: Inject pull-to-refresh into Config.kt
-        run: |
-          sed -i "s|// PULL_TO_REFRESH = true||g" \
-            app/src/main/java/com/example/webtoapp/Config.kt
-          sed -i "s|const val PULL_TO_REFRESH = true|const val PULL_TO_REFRESH = ${{ inputs.pull_to_refresh }}|g" \
             app/src/main/java/com/example/webtoapp/Config.kt
 
       - name: Inject primary colour into Config.kt and colors.xml
